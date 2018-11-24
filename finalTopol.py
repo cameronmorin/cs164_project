@@ -24,7 +24,7 @@ Alternatively you can run the command above without the -x option
 then use the command xterm hostname to open a terminal eg
     mininet> xterm C1 
 """
-
+from mininet.topo import Topo
 
 
 
@@ -44,6 +44,9 @@ class FinalTopol( Topo ):
         
         leftSwitch = self.addSwitch( 'SW1' )
         rightSwitch = self.addSwitch( 'SW2' )
+
+        #Add serverHost
+        serverHost = self.addHost( 'S1' )
         
        
         
@@ -51,9 +54,9 @@ class FinalTopol( Topo ):
         self.addLink( leftHost, leftSwitch )
         self.addLink( topHost, leftSwitch )
         self.addLink( bottomHost, leftSwitch )
-        self.addLink( rightSwitch, rightSwitch )
+        self.addLink( leftSwitch, rightSwitch )
         self.addLink( rightSwitch, serverHost )
 
 
 
-topos = { 'finaltopol': ( lambda: FinalTopl() ) }
+topos = { 'finaltopol': ( lambda: FinalTopol() ) }
