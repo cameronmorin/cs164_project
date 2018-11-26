@@ -17,7 +17,7 @@ while (1):
   username = raw_input('Please enter your username: ')
   password = getpass('Please enter your password: ')
   try:
-    s.sendto((username, password), 1)
+    s.sendto(((username, password), 1), (host, port))
 
   except socket.error, msg:
     print 'Error code: ' + str(msg[0]) + ' Message ' + msg[1]
