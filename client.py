@@ -3,7 +3,7 @@ import socket
 import sys
 
 try:
-  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 except socket.error:
   print 'Failed to create socket.'
@@ -14,11 +14,11 @@ port = 6035
 
 try:
   remote_ip = socket.gethostbyname(host)
-except socket.error, msg:
+except socket.gaierror:
   print 'Hostname could not be resolved. Exiting'
   sys.exit()
 
-s.connect((host, port))
+s.connect((remote_ip, port))
 print 'Socket connected to ' + host + ' on ip ' + remote_ip
 
 while (1):
@@ -34,7 +34,7 @@ while (1):
     sys.exit()
 
   reply = s.recv(4096)
-
+  print 'Reply: ' + reply
   if reply == 'Valid Login':
     break
   else:
