@@ -47,6 +47,10 @@ while (1):
     print 'Error: Invalid username or password.'
 
 print 'Successful login'
+#Receive menu message
+menu = s.recv(4096)
+print menu
+
 # while(1) :
 #   msg = raw_input('Enter a test message: ')
   

@@ -24,7 +24,7 @@ print 'Socket now listening'
 
 def clientthread(conn):
     # conn.send('Welcome to the server.')
-    
+
     #User sign-on
     while (1):
         username = conn.recv(1024)
@@ -41,15 +41,20 @@ def clientthread(conn):
             invalid = 'Invalid credentials. Please try again'
             conn.sendall(invalid)
     
-    #FIXME Print Menu
+    print login
+    print cred
+    userMenu = menu()
+    conn.sendall(userMenu)
+
+    #Menu input
     while (1):
         data = conn.recv(1024)
-        if (data[:2] == '!q'):
+        if (data[:1] == 'Q'):
+            #Logout
             break
-        elif (data[:9] == '!sendall '):
-            reply = data[9:]
-            for client in connections:
-                client.sendall(reply)
+        elif (data[:1] == 'P'):
+            #Change Password
+            print cred
         else:
             reply = 'OK...' + data
             if not data:
@@ -58,11 +63,12 @@ def clientthread(conn):
     
     conn.close()
 
-def printMenu():
-    print 'Welcome to the server!'
-    print 'Please choose an option:'
-    print '1: Change Password'
-    print '2: Logout'
+def menu():
+    menu = 'Welcome to the server!\n'
+    menu += 'Please choose an option:\n'
+    menu += '1: Change Password (P)\n'
+    menu += '2: Logout (Q)\n'
+    return menu
 
 while (1):
     conn, addr = s.accept()
