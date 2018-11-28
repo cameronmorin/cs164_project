@@ -22,9 +22,6 @@ except socket.gaierror:
 s.connect((remote_ip, port))
 print 'Socket connected to ' + host + ' on ip ' + remote_ip
 
-#Server welcome message
-welcome = s.recv(4096)
-print welcome
 
 #Login loop
 while (1):
@@ -42,17 +39,8 @@ while (1):
     print 'Error code: ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
 
-  # #Send password
-  # try:
-  #   s.sendall(password)
-  
-  # except socket.error, msg:
-  #   print 'Error code: ' + str(msg[0]) + ' Message ' + msg[1]
-  #   sys.exit()
-
   #Receive server reply to validate login
   reply = s.recv(4096)
-  print 'Reply: ' + reply
   if reply == 'Valid Login':
     break
   else:
