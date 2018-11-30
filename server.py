@@ -3,9 +3,9 @@ from thread import *
 
 HOST = ''
 PORT = 6035
-connections = []
 
-credentials = [('cam', '1234'), ('harley', 'rock'), ('john', 'pass')]
+connections = []
+credentials = [['cam', '1234'], ['harley', 'rock'], ['john', 'pass']]
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket Created'
@@ -23,43 +23,85 @@ s.listen(10)
 print 'Socket now listening'
 
 def clientthread(conn):
-    # conn.send('Welcome to the server.')
+    numACK = 0
 
-    #User sign-on
-    while (1):
-        username = conn.recv(1024)
-        print 'uname received: ' + username
-        password = conn.recv(1024)
-        print 'pass received ' + password
-        login = (username, password)
-        try:
-            cred = credentials.index(login)
-            reply = 'Valid Login'
-            conn.sendall(reply)
-            break
-        except ValueError:
-            invalid = 'Invalid credentials. Please try again'
-            conn.sendall(invalid)
-    
-    print login
-    print cred
-    userMenu = menu()
-    conn.sendall(userMenu)
+    while(1):
+        # landingPage = 'Welcome to MiniBook\n'
+        # landingPage += 'Login(1)\n'
+        # landingPage += 'Exit(0)\n'
 
-    #Menu input
-    while (1):
-        data = conn.recv(1024)
-        if (data[:1] == 'Q'):
-            #Logout
+        # conn.send(landingPage)
+
+        #Receive landing page response
+        initial = conn.recv(1024)
+        ack = 'ACK' + str(numACK) + ': ' + initial
+        conn.send(ack)
+        numACK = 1 - numACK
+
+        #Exit
+        if initial != '1':
+            print 'Removing connection with: ' + str(conn)
+            connections.remove(conn)
             break
-        elif (data[:1] == 'P'):
-            #Change Password
-            print cred
-        else:
-            reply = 'OK...' + data
-            if not data:
+        
+        #User sign-on
+        while (1):
+            #Receive username from client
+            username = conn.recv(1024)
+            ack = 'ACK' + str(numACK) + ': ' + username
+            conn.send(ack)
+            numACK = 1 - numACK
+
+            #Receive password from client
+            password = conn.recv(1024)
+            ack = 'ACK' + str(numACK) + ': ' + password
+            conn.send(ack)
+            numACK = 1 - numACK
+
+            login = [username, password]
+            #Look for login in list
+            try:
+                cred = credentials.index(login)
+                reply = 'Valid Login'
+                conn.send(reply)
                 break
-            conn.sendall(reply)
+            except ValueError:
+                invalid = 'Invalid credentials. Please try again'
+                conn.send(invalid)
+
+        #Send the menu
+        # userMenu = menu()
+        # conn.send(userMenu)
+
+        #Menu input
+        while (1):
+            data = conn.recv(1024)
+            ack = 'ACK' + str(numACK) + ': ' + data
+            conn.send(ack)
+            numACK = 1 - numACK
+
+            if (data[:1] == 'Q'):
+                #Logout
+                print 'Logout'
+                break
+            elif (data[:1] == 'P'):
+                #Change Password
+                newPassword = conn.recv(1024)
+                print credentials[cred][1]
+                credentials[cred][1] = newPassword
+                print credentials[cred][1]
+                ack = 'ACK' + str(numACK) + ': ' + data
+                conn.send(ack)
+                numACK = 1 - numACK
+                
+            else:
+                if data == '':
+                    print 'Connection loss in menu.'
+                    connections.remove(conn)
+                    conn.close()
+                    return
+                #Invalid operation
+                print 'Invalid operation'
     
     conn.close()
 
