@@ -112,7 +112,6 @@ while (1):
     try:
       s.send(function)
       ack = s.recv(1024)
-      print ack
       if ack[:4] != 'ACK' + str(numACK):
         print 'Wrong ACK'
       numACK = 1 - numACK
@@ -125,7 +124,7 @@ while (1):
       #Logout
       print 'Goodbye!\n'
       break
-      
+
     elif function == 'P':
       #Change password
       while(1):
