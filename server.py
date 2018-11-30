@@ -22,16 +22,11 @@ print 'Socket bind complete'
 s.listen(10)
 print 'Socket now listening'
 
+
 def clientthread(conn):
     numACK = 0
 
     while(1):
-        # landingPage = 'Welcome to MiniBook\n'
-        # landingPage += 'Login(1)\n'
-        # landingPage += 'Exit(0)\n'
-
-        # conn.send(landingPage)
-
         #Receive landing page response
         initial = conn.recv(1024)
         ack = 'ACK' + str(numACK) + ': ' + initial
@@ -69,9 +64,6 @@ def clientthread(conn):
                 invalid = 'Invalid credentials. Please try again'
                 conn.send(invalid)
 
-        #Send the menu
-        # userMenu = menu()
-        # conn.send(userMenu)
 
         #Menu input
         while (1):
@@ -105,12 +97,6 @@ def clientthread(conn):
     
     conn.close()
 
-def menu():
-    menu = 'Welcome to the server!\n'
-    menu += 'Please choose an option:\n'
-    menu += '1: Change Password (P)\n'
-    menu += '2: Logout (Q)\n'
-    return menu
 
 while (1):
     conn, addr = s.accept()

@@ -5,6 +5,7 @@ import time
 
 host = 'localhost'
 port = 6035
+numACK = 0
 
 def menu():
     # menu = 'Welcome to the server!\n'
@@ -30,22 +31,8 @@ except socket.gaierror:
 s.connect((remote_ip, port))
 print 'Socket connected to ' + host + ' on ip ' + remote_ip + '\n'
 
-# def landingPage(numACK):
-#   #Choose to login or exit
-#   choice = raw_input()
-  
-#   s.send(choice)
-#   ack = s.recv(1024)
-#   if ack[:4] != 'ACK' + numACK:
-#      print 'Wrong ACK'
-#   numACK = 1 - numACK
-  
-#   if choice == '0':
-#     print 'Chose to exit'
-#     sys.exit()
 
-numACK = 0
-
+#Main loop
 while (1):
   landingPage = 'Welcome to MiniBook\n'
   landingPage += 'Login(1)\n'
