@@ -22,16 +22,31 @@ print 'Socket bind complete'
 s.listen(10)
 print 'Socket now listening'
 
+def landingPage():
+    page = 'Welcome to MiniBook\n'
+    page += 'Login (1)\n'
+    page += 'Exit (0)\n'
+    return page
+
+def menu():
+    menu = '\nMenu\n'
+    menu += 'Please choose an option:\n'
+    menu += '1: Change Password (P)\n'
+    menu += '2: Logout (Q)\n'
+    return menu
 
 def clientthread(conn):
     numACK = 0
 
     while(1):
-        #Receive landing page response
+        #Send landing page
+        page = landingPage()
+        conn.send(page)
+
         initial = conn.recv(1024)
-        ack = 'ACK' + str(numACK) + ': ' + initial
-        conn.send(ack)
-        numACK = 1 - numACK
+        # ack = 'ACK' + str(numACK) + ': ' + initial
+        # conn.send(ack)
+        # numACK = 1 - numACK
 
         #Exit
         if initial != '1':
@@ -42,49 +57,108 @@ def clientthread(conn):
         #User sign-on
         while (1):
             #Receive username from client
+            message = 'Please enter your username: -m'
+            conn.send(message)
             username = conn.recv(1024)
-            ack = 'ACK' + str(numACK) + ': ' + username
-            conn.send(ack)
-            numACK = 1 - numACK
-
+            
+            # ack = 'ACK' + str(numACK) + ': ' + username
+            # conn.send(ack)
+            # numACK = 1 - numACK
+            
+        
             #Receive password from client
+            message = 'Please enter your password: -p'
+            conn.send(message)
             password = conn.recv(1024)
-            ack = 'ACK' + str(numACK) + ': ' + password
-            conn.send(ack)
-            numACK = 1 - numACK
+            # ack = 'ACK' + str(numACK) + ': ' + password
+            # conn.send(ack)
+            # numACK = 1 - numACK
 
             login = [username, password]
             #Look for login in list
             try:
                 cred = credentials.index(login)
-                reply = 'Valid Login'
-                conn.send(reply)
+                message = 'Welcome ' + credentials[cred][0] + '!-o'
+                conn.send(message)
+                #Print ACK from client
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    print 'System error. Closing connection'
+                    connections.remove(conn)
+                    conn.close()
+                    return
                 break
             except ValueError:
-                invalid = 'Invalid credentials. Please try again'
+                invalid = 'Invalid credentials. Please try again\n-o'
                 conn.send(invalid)
+                #Print ACK from client
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    print 'System error. Closing connection'
+                    connections.remove(conn)
+                    conn.close()
+                    return
 
 
-        #Menu input
+        #Menu
         while (1):
-            data = conn.recv(1024)
-            ack = 'ACK' + str(numACK) + ': ' + data
-            conn.send(ack)
-            numACK = 1 - numACK
+            message = menu()
+            conn.send(message)
+            # ack = 'ACK' + str(numACK) + ': ' + data
+            # conn.send(ack)
+            # numACK = 1 - numACK
 
+            data = conn.recv(1024)
             if (data[:1] == 'Q'):
                 #Logout
-                print 'Logout'
+                conn.send('Logging out...\n-o')
+                #Print ACK from client
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    print 'System error. Closing connection'
+                    connections.remove(conn)
+                    conn.close()
+                    return
                 break
             elif (data[:1] == 'P'):
                 #Change Password
-                newPassword = conn.recv(1024)
-                print credentials[cred][1]
-                credentials[cred][1] = newPassword
-                print credentials[cred][1]
-                ack = 'ACK' + str(numACK) + ': ' + data
-                conn.send(ack)
-                numACK = 1 - numACK
+                while(1):
+                    message = 'Please enter new password: -p'
+                    conn.send(message)
+                    newPassword = conn.recv(1024)
+
+                    message = 'Please re-enter your new password: -p'
+                    conn.send(message)
+                    verify = conn.recv(1024)
+
+                    if newPassword == verify:
+                        credentials[cred][1] = newPassword
+                        message = 'Password change successful.\n-o'
+                        conn.send(message)
+                        #Print ACK from client
+                        ack = conn.recv(1024)
+                        if ack != 'ACK':
+                            print 'System error. Closing connection'
+                            connections.remove(conn)
+                            conn.close()
+                            return
+                        break
+                    else:
+                        message = 'Passwords did not match. Please try again\n-o'
+                        conn.send(message)
+                        #Print ACK from client
+                        ack = conn.recv(1024)
+                        if ack != 'ACK':
+                            print 'System error. Closing connection'
+                            connections.remove(conn)
+                            conn.close()
+                            return
+                # print credentials[cred][1]
+                # credentials[cred][1] = newPassword
+                # print credentials[cred][1]
+                # ack = 'ACK' + str(numACK) + ': ' + data
+                # conn.send(ack)
+                # numACK = 1 - numACK
                 
             else:
                 if data == '':
