@@ -44,9 +44,6 @@ def clientthread(conn):
         conn.send(page)
 
         initial = conn.recv(1024)
-        # ack = 'ACK' + str(numACK) + ': ' + initial
-        # conn.send(ack)
-        # numACK = 1 - numACK
 
         #Exit
         if initial != '1':
@@ -59,20 +56,12 @@ def clientthread(conn):
             #Receive username from client
             message = 'Please enter your username: -m'
             conn.send(message)
-            username = conn.recv(1024)
-            
-            # ack = 'ACK' + str(numACK) + ': ' + username
-            # conn.send(ack)
-            # numACK = 1 - numACK
-            
+            username = conn.recv(1024)    
         
             #Receive password from client
             message = 'Please enter your password: -p'
             conn.send(message)
             password = conn.recv(1024)
-            # ack = 'ACK' + str(numACK) + ': ' + password
-            # conn.send(ack)
-            # numACK = 1 - numACK
 
             login = [username, password]
             #Look for login in list
