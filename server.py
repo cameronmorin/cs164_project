@@ -5,7 +5,9 @@ HOST = ''
 PORT = 6035
 
 connections = []
-credentials = [['cam', '1234'], ['harley', 'rock'], ['john', 'pass']]
+credentials = [['cam', '99fb2f48c6af4761f904fc85f95eb56190e5d40b1f44ec3a9c1fa319'],
+               ['harley', '6f1bed21dd4f3e7c3f0fc3c4152126fe3e9e6bcabb2610aa3d645549'],
+               ['john', 'ccc9c73a37651c6b35de64c3a37858ccae045d285f57fffb409d251d']]
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket Created'
@@ -88,6 +90,8 @@ def clientthread(conn):
                     conn.close()
                     return
 
+
+        #FIXME Add unread messages on sign-in
 
         #Menu
         while (1):
