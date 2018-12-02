@@ -34,11 +34,7 @@ print 'Socket connected to ' + host + ' on ip ' + remote_ip + '\n'
 
 #Main loop
 while (1):
-  # landingPage = 'Welcome to MiniBook\n'
-  # landingPage += 'Login(1)\n'
-  # landingPage += 'Exit(0)\n'
-  # print landingPage
-
+  #Receive message from the server
   server = s.recv(1024)
   
   if server == '':
