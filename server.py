@@ -1,13 +1,19 @@
-import socket, sys
+import socket, sys, hashlib
 from thread import *
+from user import User
 
 HOST = ''
 PORT = 6035
 
 connections = []
-credentials = [['cam', '99fb2f48c6af4761f904fc85f95eb56190e5d40b1f44ec3a9c1fa319'],
-               ['harley', '6f1bed21dd4f3e7c3f0fc3c4152126fe3e9e6bcabb2610aa3d645549'],
-               ['john', 'ccc9c73a37651c6b35de64c3a37858ccae045d285f57fffb409d251d']]
+# credentials = [['cam', '99fb2f48c6af4761f904fc85f95eb56190e5d40b1f44ec3a9c1fa319'],
+#                ['harley', '6f1bed21dd4f3e7c3f0fc3c4152126fe3e9e6bcabb2610aa3d645549'],
+#                ['john', 'ccc9c73a37651c6b35de64c3a37858ccae045d285f57fffb409d251d']]
+#Create the user credentials
+cam = User('cam', '99fb2f48c6af4761f904fc85f95eb56190e5d40b1f44ec3a9c1fa319')
+harley = User('harley', '6f1bed21dd4f3e7c3f0fc3c4152126fe3e9e6bcabb2610aa3d645549')
+john = User('john', 'ccc9c73a37651c6b35de64c3a37858ccae045d285f57fffb409d251d')
+users = [cam, harley, john]
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket Created'
@@ -53,8 +59,9 @@ def clientthread(conn):
             connections.remove(conn)
             break
         
+        validCred = False
         #User sign-on
-        while (1):
+        while validCred == False:
             #Receive username from client
             message = 'Please enter your username: -m'
             conn.send(message)
@@ -65,21 +72,24 @@ def clientthread(conn):
             conn.send(message)
             password = conn.recv(1024)
 
+            hashPass = hashlib.sha224(password).hexdigest()
             login = [username, password]
             #Look for login in list
-            try:
-                cred = credentials.index(login)
-                message = 'Welcome ' + credentials[cred][0] + '!-o'
-                conn.send(message)
-                #Print ACK from client
-                ack = conn.recv(1024)
-                if ack != 'ACK':
-                    print 'System error. Closing connection'
-                    connections.remove(conn)
-                    conn.close()
-                    return
-                break
-            except ValueError:
+            for user in users:
+                if user.username == username and user.password == hashPass:
+                    message = 'Welcome ' + user.username + '!-o'
+                    conn.send(message)
+                    #Print ACK from client
+                    ack = conn.recv(1024)
+                    if ack != 'ACK':
+                        print 'System error. Closing connection'
+                        connections.remove(conn)
+                        conn.close()
+                        return
+                    validCred = True
+                    break
+            
+            if validCred == False:
                 invalid = 'Invalid credentials. Please try again\n-o'
                 conn.send(invalid)
                 #Print ACK from client
@@ -89,6 +99,30 @@ def clientthread(conn):
                     connections.remove(conn)
                     conn.close()
                     return
+                
+                  
+            # try:
+            #     cred = credentials.index(login)
+            #     message = 'Welcome ' + credentials[cred][0] + '!-o'
+            #     conn.send(message)
+            #     #Print ACK from client
+            #     ack = conn.recv(1024)
+            #     if ack != 'ACK':
+            #         print 'System error. Closing connection'
+            #         connections.remove(conn)
+            #         conn.close()
+            #         return
+            #     break
+            # except ValueError:
+            #     invalid = 'Invalid credentials. Please try again\n-o'
+            #     conn.send(invalid)
+            #     #Print ACK from client
+            #     ack = conn.recv(1024)
+            #     if ack != 'ACK':
+            #         print 'System error. Closing connection'
+            #         connections.remove(conn)
+            #         conn.close()
+            #         return
 
 
         #FIXME Add unread messages on sign-in
