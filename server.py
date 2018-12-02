@@ -102,11 +102,9 @@ def clientthread(conn):
 
         #Menu
         while (1):
+            #Send menu
             message = menu()
             conn.send(message)
-            # ack = 'ACK' + str(numACK) + ': ' + data
-            # conn.send(ack)
-            # numACK = 1 - numACK
 
             data = conn.recv(1024)
             if (data[:1] == 'Q'):
@@ -153,12 +151,6 @@ def clientthread(conn):
                             connections.remove(conn)
                             conn.close()
                             return
-                # print credentials[cred][1]
-                # credentials[cred][1] = newPassword
-                # print credentials[cred][1]
-                # ack = 'ACK' + str(numACK) + ': ' + data
-                # conn.send(ack)
-                # numACK = 1 - numACK
                 
             else:
                 if data == '':
