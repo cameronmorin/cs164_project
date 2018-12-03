@@ -28,16 +28,18 @@ print 'Socket now listening'
 
 def landingPage():
     page = 'Welcome to MiniBook\n'
-    page += 'Login (1)\n'
-    page += 'Exit (0)\n'
+    page += '1: Login\n'
+    page += '0: Exit\n'
     return page
 
 def menu():
     menu = '\nMenu\n'
     menu += 'Please choose an option:\n'
-    menu += '1: Change Password (P)\n'
-    menu += '2: Logout (Q)\n'
-    menu += '3: Send message (M)\n'
+    menu += '1: Change Password\n'
+    menu += '2: Send message\n'
+    menu += '3: Read unread messages\n'
+    menu += '4: Send broadcast message\n'
+    menu += '0: Logout\n'
     return menu
 
 def ackError(conn, user):
@@ -48,25 +50,40 @@ def ackError(conn, user):
     conn.close()
 
 def sendMessage(sender):
-    toSend = '\n===========\n'
+    toSend = '-----------\n'
     toSend += 'FROM: ' + sender + '\n'
     return toSend
 
-def printUnreadMessages(user, flag):
-    toSend = 'You have received ' + str(len(user.unreadMessages)) + ' new messages\n'
+#FIXME Make a user class function
+def printUnreadMessages(user):
+    if len(user.unreadMessages) > 1:
+        toSend = 'You have ' + str(len(user.unreadMessages)) + ' unread messages:\n'
+    else:
+        toSend = 'You have 1 unread message:\n'
+
     for msg in user.unreadMessages:
         toSend += sendMessage(msg[0])
         toSend += msg[1]
     toSend += '-o'
     return toSend
 
+#FIXME Make a user class function
+def printNewMessages(user):
+    if len(user.newMessages) > 1:
+        toSend = 'You have ' + str(len(user.newMessages)) + ' new messages:\n'
+    else:
+        toSend = 'You have 1 new message:\n'
+    
+    for msg in user.newMessages:
+        toSend += sendMessage(msg[0])
+        toSend += msg[1]
+    toSend += '-o'
+    return toSend
 
 def clientthread(conn):
     # numACK = 0
 
     while(1):
-        flag = 0                #Flag to denote unread messages on login
-
         #Send landing page
         page = landingPage()
         conn.send(page)
@@ -126,9 +143,7 @@ def clientthread(conn):
 
         #Notify user of unread messages on sign-in
         if len(currentUser.unreadMessages) > 0:
-            #Print number of unread messages
-            flag = 1
-            message = 'You have ' + str(len(currentUser.unreadMessages)) + ' new messages:\n-o'
+            message = 'You have ' + str(len(currentUser.unreadMessages)) + ' unread messages.\n-o'
             conn.send(message)
             ack = conn.recv(1024)
             if ack != 'ACK':
@@ -137,22 +152,21 @@ def clientthread(conn):
         #Menu
         while (1):
             #FIXME Check if the user received any messages in real time
-            if len(currentUser.unreadMessages) > 0:
-                if flag == 0:
-                    toSend = printUnreadMessages(currentUser, flag)
-                    currentUser.unreadMessages = []
-                    conn.send(toSend)
-                    #Print ACK from client
-                    ack = conn.recv(1024)
-                    if ack != 'ACK':
-                        ackError(conn, currentUser)
+            if len(currentUser.newMessages) > 0:
+                toSend = printNewMessages(currentUser)
+                currentUser.newMessages = []
+                conn.send(toSend)
+                #Print ACK from client
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    ackError(conn, currentUser)
 
             #Send menu
             message = menu()
             conn.send(message)
 
             data = conn.recv(1024)
-            if (data[:1] == 'Q'):
+            if (data[:1] == '0'):
                 #Logout
                 conn.send('Logging out...\n-o')
 
@@ -168,7 +182,7 @@ def clientthread(conn):
                     ackError(conn, currentUser)
                     return
                 break
-            elif (data[:1] == 'P'):
+            elif (data[:1] == '1'):
                 #Change Password
                 while(1):
                     message = 'Please enter new password: -p'
@@ -197,7 +211,7 @@ def clientthread(conn):
                         if ack != 'ACK':
                             ackError(conn, currentUser)
                             return
-            elif (data[:1] =='M'):
+            elif (data[:1] =='2'):
                 #Send message
                 message = 'Please enter your message: -m'
                 conn.send(message)
@@ -209,21 +223,12 @@ def clientthread(conn):
 
                 for user in users:
                     if user.username == recip:
-                        user.unreadMessages.append([currentUser.username, messageToSend])
-                        # if user.onlineStatus == 0:
-                        #     #Recipient is offline
-                        #     user.unreadMessages.append([currentUser.username, messageToSend])
-                        # else:
-                        #     #Recipient is online
-                        #     messageToSend += '-o'       #Add display only flag
-                            
-                        #     message = sendMessage(currentUser.username) + messageToSend
-                        #     #send the message out on the recipient connection
-                        #     user.connection.send(message)
-                        #     #Print ACK from client
-                        #     ack = user.connection.recv(1024)
-                        #     # if ack != 'ACK':
-                        #     #     ackError(user.connection, user)
+                        if user.onlineStatus == 0:
+                            #The user is offline
+                            user.unreadMessages.append([currentUser.username, messageToSend])
+                        else:
+                            #The user is online
+                            user.newMessages.append([currentUser.username, messageToSend])
                         break
                 
                 #Message sent
@@ -234,6 +239,33 @@ def clientthread(conn):
                 if ack != 'ACK':
                     ackError(conn, currentUser)
                     return
+            elif (data[:1] == '3'):
+                #Read unread messages
+                if len(currentUser.unreadMessages) > 0:
+                    toSend = printUnreadMessages(currentUser)
+                    currentUser.unreadMessages = []
+                    conn.send(toSend)
+                    #Print ACK from client
+                    ack = conn.recv(1024)
+                    if ack != 'ACK':
+                        ackError(conn, currentUser)
+                else:
+                    #No unread messages
+                    toSend = 'You have no unread messages at this time.\n -o'
+                    conn.send(toSend)
+                    #Print ACK from client
+                    ack = conn.recv(1024)
+                    if ack != 'ACK':
+                        ackError(conn, currentUser)
+            elif (data[:1] == '4'):
+                #Broadcast message
+                message = 'Please enter your message: -m'
+                conn.send(message)
+                messageToSend = conn.recv(1024)
+
+                for user in users:
+                    if user.onlineStatus == 1 and user != currentUser:
+                        user.newMessages.append([currentUser.username, messageToSend])
             elif data == 'ACK':
                 continue
             else:
