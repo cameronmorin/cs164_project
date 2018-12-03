@@ -2,7 +2,8 @@ class User:
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.unreadMessages = []    #[[sender.username, message-o]]
+        self.unreadMessages = []    #[[sender.username, message]]
+        self.newMessages = []       #Used for real-time messages
         self.timeline = []
         self.friends = []
         self.friendRequests = []
