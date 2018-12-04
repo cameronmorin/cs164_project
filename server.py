@@ -34,11 +34,14 @@ def landingPage():
 
 def menu():
     menu = '\nMenu\n'
-    menu += 'Please choose an option:\n'
+    # menu += 'Please choose an option:\n'
     menu += '1: Change Password\n'
     menu += '2: Send message\n'
     menu += '3: Read unread messages\n'
     menu += '4: Send broadcast message\n'
+    menu += '5: See Friends\n'
+    menu += '6: Send friend request\n'
+    menu += '7: Respond to friend requests\n'
     menu += '0: Logout\n'
     return menu
 
@@ -149,6 +152,13 @@ def clientthread(conn):
             if ack != 'ACK':
                 ackError(conn, currentUser)
 
+        #FIXME Implement friend request notification
+        if len(currentUser.friendRequests) > 0:
+            message = 'You have ' + str(len(currentUser.friendRequests)) + ' friend requests awaiting decision.\n-o'
+            conn.send(message)
+            ack = conn.recv(1024)
+            if ack != 'ACK':
+                ackError(conn, currentUser)
         #Menu
         while (1):
             #FIXME Check if the user received any messages in real time
@@ -266,6 +276,85 @@ def clientthread(conn):
                 for user in users:
                     if user.onlineStatus == 1 and user != currentUser:
                         user.newMessages.append([currentUser.username, messageToSend])
+                message = 'Broadcast sent successfully!\n-o'
+                conn.send(message)
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    ackError(conn, currentUser)
+            elif (data[:1] == '5'):
+                #See friends
+                if len(currentUser.friends) == 0:
+                    message = 'You have 0 friends.\n-o'
+                else:
+                    #User has friends in the friends list
+                    message = currentUser.printFriends()
+                conn.send(message)
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    ackError(conn, currentUser)
+            elif (data[:1] == '6'):
+                #Send friend request
+                foundFriend = 0
+
+                message = 'Please enter a user to add: -m'
+                conn.send(message)
+                friend = conn.recv(1024)
+                for item in users:
+                    if item.username == friend:
+                        try:
+                            item.friends.index(currentUser)
+                            foundFriend = 2
+                        except ValueError:
+                            foundFriend = 1
+                            item.friendRequests.append(currentUser)
+                            foundFriend = 1
+                if foundFriend == 1:
+                    #Added friend 
+                    message = 'Friend request sent to ' + friend + ' successfully.\n-o'
+                elif foundFriend == 2:
+                    #Already friends
+                    message = 'Already friends with ' + friend + '\n-o'
+                else:
+                    message = 'ERROR: Could not find user: ' + friend + '\n-o'
+                conn.send(message)
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    ackError(conn, currentUser)
+            elif (data[:1] == '7'):
+                #Friend request response
+                if len(currentUser.friendRequests) == 0:
+                    #User has 0 friend requests
+                    message = 'You have 0 friend requests awaiting response.\n-o'
+                    conn.send(message)
+                    ack = conn.recv(1024)
+                    if ack != 'ACK':
+                        ackError(conn, currentUser)
+                else:
+                    #User has awaiting friend requests
+                    for request in currentUser.friendRequests:
+                        message = request.username + ' wants to be your friend\n'
+                        message += 'Accept (A) or Deny (D): -m'
+                        conn.send(message)
+                        reply = conn.recv(1024)
+                        if reply.lower() == 'accept' or reply.lower() == 'a':
+                            #Add friend to current friends list
+                            currentUser.friends.append(request)
+                            #Add current to requester friends list
+                            request.friends.append(currentUser)
+                            message = 'Accepted ' + request.username + '\'s friend request!\n-o'
+                            conn.send(message)
+                            ack = conn.recv(1024)
+                            if ack != 'ACK':
+                                ackError(conn, currentUser)
+                        else:
+                            #Do not add friend
+                            message = 'Denied ' + request.username + '\'s friend request.\n-o'
+                            conn.send(message)
+                            ack = conn.recv(1024)
+                            if ack != 'ACK':
+                                ackError(conn, currentUser)
+                    currentUser.friendRequests = []
+            
             elif data == 'ACK':
                 continue
             else:
