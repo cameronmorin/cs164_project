@@ -3,7 +3,7 @@ import socket
 import sys
 import time
 
-host = 'localhost'
+host = ''
 port = 6035
 numACK = 0
 
