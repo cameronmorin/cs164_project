@@ -1,4 +1,4 @@
-import socket, sys, hashlib
+import socket, sys, hashlib, time
 from thread import *
 from user import User
 
@@ -10,6 +10,8 @@ cam = User('cam', '99fb2f48c6af4761f904fc85f95eb56190e5d40b1f44ec3a9c1fa319')
 harley = User('harley', '6f1bed21dd4f3e7c3f0fc3c4152126fe3e9e6bcabb2610aa3d645549')
 john = User('john', 'ccc9c73a37651c6b35de64c3a37858ccae045d285f57fffb409d251d')
 users = [cam, harley, john]
+posts = []
+
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket Created'
@@ -42,6 +44,8 @@ def menu():
     menu += '5: See Friends\n'
     menu += '6: Send friend request\n'
     menu += '7: Respond to friend requests\n'
+    menu += '8: Post status\n'
+    menu += '9: See timeline\n'
     menu += '0: Logout\n'
     return menu
 
@@ -82,6 +86,36 @@ def printNewMessages(user):
         toSend += msg[1]
     toSend += '-o'
     return toSend
+
+def getPost(post, user):
+    #post = [time, user, status]
+    postTime = post[0]
+    postUser = post[1]
+    postStatus = post[2]
+
+    #Timeline output
+    output = ''
+
+    #Flag used to determine friendship: 0 = no, 1 = yes
+    isFriend = 0
+
+    if postUser == user:
+        isFriend = 1
+    else:
+        #Check for postUser in friends list
+        for friend in user.friends:
+            if friend == postUser:
+                isFriend = 1
+                break
+    
+    #Include post on timeline
+    if isFriend == 1:
+        #Add post to timeline
+        output += postTime + '\n'
+        output += postUser.username + '\n'
+        output += '     ' + postStatus + '\n'
+    return output
+
 
 def clientthread(conn):
     # numACK = 0
@@ -354,7 +388,38 @@ def clientthread(conn):
                             if ack != 'ACK':
                                 ackError(conn, currentUser)
                     currentUser.friendRequests = []
-            
+            elif (data[:1] == '8'):
+                #Post Status
+                message = 'Status: -m'
+                conn.send(message)
+                post = conn.recv(1024)
+                postTime = time.strftime("%Y:%m:%d %H:%M") # Include seconds("%Y:%m:%d%H%M%s")
+
+                update = [postTime, currentUser, post]
+                posts.append(update)
+
+                message = 'Post added to timeline!\n -o'
+                conn.send(message)
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    ackError(conn, currentUser)
+            elif (data[:1] == '9'):
+                timeline = ''
+                #Post timeline FIXME TEST
+                for post in posts:
+                    message = getPost(post, currentUser)
+                    if message != '':
+                        timeline += message
+                
+                #Empty timeline
+                if timeline == '':
+                    timeline = 'Timeline is empty.\n-o'
+                else: 
+                    timeline += '-o'
+                conn.send(timeline)
+                ack = conn.recv(1024)
+                if ack != 'ACK':
+                    ackError(conn, currentUser)
             elif data == 'ACK':
                 continue
             else:
