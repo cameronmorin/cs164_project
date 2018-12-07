@@ -42,8 +42,6 @@ Implement both server and client side for a terminal based social media.
 
 I plan on implementing the functions as user class functions so that the code is ***cleaner*** and ***easier to read***.
 
-I also want to implement user creation on the landing page so that users may create new accounts if they do not have one.
-
 ## Closing Statement
 
 All code in this project is original and the intellectual property of __Cameron Morin__. Any reuse of this code for future projects is ***strongly*** discouraged. I had a lot of fun working on this project, and I hope to explore more production-based projects in the future! :rocket:
