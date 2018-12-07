@@ -31,6 +31,7 @@ print 'Socket now listening'
 def landingPage():
     page = 'Welcome to MiniBook\n'
     page += '1: Login\n'
+    page += '2: Create Account\n'
     page += '0: Exit\n'
     return page
 
@@ -116,6 +117,41 @@ def getPost(post, user):
         output += '     ' + postStatus + '\n'
     return output
 
+def createAccount(conn):
+    #FIXME Implement account creation
+    while(1):
+        conn.send('Please create a username: -m')
+        newUsername = conn.recv(1024)
+
+        #Search to see if username is already allocated
+        taken = 0
+        for user in users:
+            if user.username == newUsername:
+                taken = 1
+                break
+
+        if taken == 1:
+            #Reprompt for a new username
+            message = 'ERROR: username already taken. Please try again\n-o'
+            conn.send(message)
+            ack = conn.recv(1024)
+            if ack != 'ACK':
+                connections.remove(conn)
+                conn.close()
+                return
+        else:
+            #Ask for password
+            conn.send('Please create a password: -p')
+            newPass = conn.recv(1024)
+            newUser = User(newUsername, hashlib.sha224(newPass).hexdigest())
+            users.append(newUser)
+            break
+    conn.send('Account created!-o')
+    ack = conn.recv(1024)
+    if ack != 'ACK':
+        connections.remove(conn)
+        conn.close()
+    return
 
 def clientthread(conn):
     # numACK = 0
@@ -128,10 +164,23 @@ def clientthread(conn):
         initial = conn.recv(1024)
 
         #Exit
-        if initial != '1':
+        if initial != '1' and initial != '2':
             print 'Removing connection with: ' + str(conn)
             connections.remove(conn)
             break
+        
+        #Check create account choice
+        if initial == '2':
+            createAccount(conn)
+            message = 'Chose to create user.\n-o'
+            conn.send(message)
+            ack = conn.recv(1024)
+            if ack != 'ACK':
+                connections.remove(conn)
+                conn.close()
+                return
+            else:
+                continue
         
         validCred = False
         #User sign-on
