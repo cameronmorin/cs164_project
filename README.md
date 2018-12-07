@@ -44,6 +44,8 @@ I plan on implementing the functions as user class functions so that the code is
 
 I also want to implement user creation on the landing page so that users may create new accounts if they do not have one.
 
+FIXME: I need to fix the function so that users may not add themselves as friends.
+
 ## Closing Statement
 
 All code in this project is original and the intellectual property of __Cameron Morin__. Any reuse of this code for future projects is ***strongly*** discouraged. I had a lot of fun working on this project, and I hope to explore more production-based projects in the future! :rocket:
