@@ -382,27 +382,34 @@ def clientthread(conn):
                 message = 'Please enter a user to add: -m'
                 conn.send(message)
                 friend = conn.recv(1024)
-                for item in users:
-                    if item.username == friend:
-                        try:
-                            item.friends.index(currentUser)
-                            foundFriend = 2
-                        except ValueError:
-                            foundFriend = 1
-                            item.friendRequests.append(currentUser)
-                            foundFriend = 1
-                if foundFriend == 1:
-                    #Added friend 
-                    message = 'Friend request sent to ' + friend + ' successfully.\n-o'
-                elif foundFriend == 2:
-                    #Already friends
-                    message = 'Already friends with ' + friend + '\n-o'
+                if friend == currentUser.username:
+                    message = 'Cannot add yourself as a friend...\n-o'
+                    conn.send(message)
+                    ack = conn.recv(1024)
+                    if ack != 'ACK':
+                        ackError(conn, currentUser)
                 else:
-                    message = 'ERROR: Could not find user: ' + friend + '\n-o'
-                conn.send(message)
-                ack = conn.recv(1024)
-                if ack != 'ACK':
-                    ackError(conn, currentUser)
+                    for item in users:
+                        if item.username == friend:
+                            try:
+                                item.friends.index(currentUser)
+                                foundFriend = 2
+                            except ValueError:
+                                foundFriend = 1
+                                item.friendRequests.append(currentUser)
+                                foundFriend = 1
+                    if foundFriend == 1:
+                        #Added friend 
+                        message = 'Friend request sent to ' + friend + ' successfully.\n-o'
+                    elif foundFriend == 2:
+                        #Already friends
+                        message = 'Already friends with ' + friend + '\n-o'
+                    else:
+                        message = 'ERROR: Could not find user: ' + friend + '\n-o'
+                    conn.send(message)
+                    ack = conn.recv(1024)
+                    if ack != 'ACK':
+                        ackError(conn, currentUser)
             elif (data[:1] == '7'):
                 #Friend request response
                 if len(currentUser.friendRequests) == 0:
