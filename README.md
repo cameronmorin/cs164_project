@@ -1,4 +1,4 @@
-# CS 164 Final Project
+# CS 164 Final Project: Termedia
 > Cameron Morin
 
 ## Objective
